@@ -114,7 +114,7 @@
 <div class="card">
   <h3>베이스/드론 검증</h3>
   <ul>
-    <li><b>Passive-FTC 단일고장 검증:</b> 모터 2번 1초 고장 → <span class="ok-txt">25초 제어비행, 최종고도 −0.06m(추락 없음)</span>. 옛 코드(이중 전용)는 단일고장 시 <code>axis_tilt</code>·<code>chi</code> 전 범위 추락(고도 기준 재확인) → 전환 정당성 확정.</li>
+    <li><b>Passive-FTC 단일고장 검증:</b> <b>모터 2번이 t=1초에 영구 완전 고장</b>(꺼졌다 켜지는 게 아니라 그 뒤로 계속 정지 = 4모터 중 1개 완전 상실) → <span class="ok-txt">25초 제어비행, 최종고도 −0.06m(추락 없음)</span>. 옛 코드(이중 전용)는 단일고장 시 <code>axis_tilt</code>·<code>chi</code> 전 범위 추락(고도 기준 재확인) → 전환 정당성 확정.</li>
     <li><b>스핀 안정화 확인:</b> 고장 후 요(yaw) 각속도가 <b>−800°/s로 수렴(일정 스핀)</b>, 누적 요각 직선 증가(약 55회전). Mueller 2014 relaxed-hover와 동일 메커니즘.</li>
     <li><b>드론 IRIS(1.37kg) 교체:</b> Minnie(0.29kg) 너무 작아 → 더 큰 IRIS로. init 한 줄로 교체, 제어기 자동 재유도. 단일고장 생존 확인(강하 −6.2m→회복).</li>
     <li><b>무화물 baseline 확정:</b> Agility 0.5/0.5. 강하 5.4m·회복 7.3s. (IRIS는 무거워 강하 큼 = 본질적, 적응 효과 보일 여지 큼)</li>
@@ -136,9 +136,12 @@
   </div>
 
   <h3>★ 무게 추정기 새 모델 이식 — 성공 (<code>test_estimate_IRIS.m</code>)</h3>
-  <p>새 모델은 추력이 프로펠러 맵 기반이라 옛 <code>k0·w²</code> 불가. 대신 <b>호버 모터속도 기반</b>:
-     <code>m_total = m_dry · sum(ω_hover²)/sum(ω_dry²)</code> (마른 IRIS 1회 보정). PX4 호버추력 추정과 동일 원리.
-     고장(t=1s) <b>전 호버 구간</b>(−0.5~0.8s)에서만 측정 → 짧은 시뮬로 충분.</p>
+  <p><b>▶ 가설(실험 전):</b> 호버에서 총추력은 중력과 평형 → <code>Σ추력 ∝ 총질량</code>. 새 모델 추력 ≈ <code>k·Σ(모터속도²)</code>.
+     따라서 마른 드론으로 1회 보정하면 화물 호버 모터속도만으로 총질량을 역산 가능할 것이다:
+     <code>m_total = m_dry · sum(ω_hover²)/sum(ω_dry²)</code> (PX4 호버추력 추정과 동일 원리).</p>
+  <p><b>▶ 실험 방법:</b> 마른 IRIS 호버로 <code>Σω²_dry</code> 보정 → 화물 0/200/500/1000g을 plant에만 장착(제어기는 모름) →
+     고장(t=1s) <b>전 안정 호버 구간</b>(−0.5~0.8s)에서만 모터속도 측정 → <code>m_total−m_dry</code>를 참값과 비교.</p>
+  <p><b>▶ 검증 결과:</b></p>
   <table>
     <tr><th>화물 참값</th><th>추정 총질량</th><th>추정 화물</th><th>오차</th></tr>
     <tr><td>0 g</td><td>1.370 kg</td><td>0 g</td><td class="ok-txt">0 g</td></tr>
