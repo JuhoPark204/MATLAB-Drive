@@ -42,7 +42,7 @@ simVars.drone.mass = loadedParams.parameters.m;
 
 %% Payload (적응형 FTC 연구용) ----------------------------------
 % plant(진짜 드론)에만 반영. 추정기/제어기는 이 값을 모르고 추정해야 함.
-payload.mass   = 0.2;     % [kg] 진짜 화물무게  (실험: 0 / 0.2 / 0.5 / 1.0)
+payload.mass   = 0.0;     % [kg] 진짜 화물무게  (실험: 0 / 0.2 / 0.5 / 1.0)
 payload.offset = 0.05;    % [m]  하단 고정 오프셋 (무게중심 아래, 고정값)
 simVars.payload = payload;
 

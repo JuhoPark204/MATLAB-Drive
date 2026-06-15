@@ -11,7 +11,7 @@ par.freq = 500; % control frequency
 %   (4)         (3)
 
 par.fail_id = [3];      % index of the failured propeller
-par.DRF_enable = 1;     % failure of two diagonal rotors?
+par.DRF_enable = 0;     % failure of two diagonal rotors? (0=단일 로터 고장, 계획서 시나리오)
 par.fail_time = 5.0;    % moment failiure occurs (0~5s 멀쩡한 호버 → 무게추정 구간)
 
 % drone parameters
@@ -27,7 +27,7 @@ par.g = 9.81;
 %  par.adaptive = 0  → 제어기 B : 기존 FTC (질량 0.375 고정, 화물 모름)
 %  par.adaptive = 1  → 제어기 C1: 추정 화물무게를 질량·관성에 반영
 %  (게인/허용기울기는 아직 안 건드림 → H1 "질량만 맞춰도 사나?" 검증용)
-par.adaptive       = 1;       % 0 = 기존(B),  1 = 적응(C1)
+par.adaptive       = 0;       % 0 = 기존(B),  1 = 적응(C1)
 par.payload_est    = 0.207;   % [kg] estimate_payload 결과 입력 (호버에서 추정한 값)
 par.payload_offset = 0.05;    % [m]  화물 하단 오프셋 (기지 고정값, simParams와 동일)
 
@@ -48,8 +48,8 @@ par.w_min = 0;
 par.chi = 105;          % output scheduling parameter, [deg].
 par.pos_z_p_gain = 10;   % altitude control pd gains
 par.pos_z_d_gain = 6;
-par.axis_tilt = 0.0;    % primary axis tilting param, 0 ~ 0.2,  
-                        % must be 0 for double rotor failure cases
+par.axis_tilt = 0.05;    % primary axis tilting param, 0 ~ 0.2,
+                        % 단일 로터 고장에선 nonzero 필요 (이중 고장이면 0)
 
 par.att_p_gain = 200;   % attitude control pd gains 
 par.att_d_gain = 30;

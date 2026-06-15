@@ -76,7 +76,7 @@
   <div class="sub">화물 장착 드론의 로터 고장 대응 적응형 제어기 설계<br>
   <span style="font-size:13px">Adaptive FTC for Quadrotors with Bottom-Fixed Payload under Rotor Failure</span></div>
   <div class="meta">
-    <span><b>기반 코드</b> INDI_Quadrotor_FTC (Sun et al. 2020, IEEE T-RO)</span>
+    <span><b>기반 코드</b> Passive-FTC-Quadrotor (Beyer 2023, AIAA JGCD) — 단일고장용 전환</span>
     <span><b>연구원</b> 박주호</span>
     <span><b>지도교수</b> 임헌국</span>
     <span><b>최종 갱신</b> 2026-06-16</span>
@@ -98,6 +98,57 @@
   <tr><td><b>4단계</b></td><td>3제어기 × 4화물조건 비교 실험 및 분석</td>
       <td><span class="badge b-todo">⬜ 예정</span></td></tr>
 </table>
+
+<div class="hl">
+  <b>⚠️ 베이스 코드 전환 (2026-06-16):</b> 기존 INDI 코드는 <b>이중 고장 전용</b>임이 검증됨
+  (단일 고장 시 <code>axis_tilt</code>·<code>chi</code> 전 범위 스윕에도 추락). 계획서 시나리오인 <b>단일 로터 고장</b>을 위해
+  <a href="https://github.com/iff-gsc/Passive-FTC-Quadrotor" style="color:var(--accent)">Passive-FTC-Quadrotor (iff-gsc)</a>로 전환.
+  <b>R2026a 구동 검증 성공</b> — 모터 1개 고장 후 25초 제어 비행, 최종 고도 −0.06m(추락 없음).
+  1·2단계 성과(무게 추정 알고리즘 등)는 유효하며 새 베이스로 이식 예정.
+  <br>드론 모델 한계도 발견: Bebop2(375g)는 화물 1000g 물리적 불가(추력 포화) → 화물범위/드론모델 재검토 필요.
+</div>
+
+<!-- ===================== 단일고장 베이스 실험 ===================== -->
+<h2>단일고장 베이스(Passive-FTC) + IRIS 실험 <span class="badge b-ok">2단계 완료</span></h2>
+
+<div class="card">
+  <h3>베이스/드론 검증</h3>
+  <ul>
+    <li><b>Passive-FTC 단일고장 검증:</b> 모터 2번 1초 고장 → <span class="ok-txt">25초 제어비행, 최종고도 −0.06m(추락 없음)</span>. 옛 코드(이중 전용)는 단일고장 시 <code>axis_tilt</code>·<code>chi</code> 전 범위 추락(고도 기준 재확인) → 전환 정당성 확정.</li>
+    <li><b>스핀 안정화 확인:</b> 고장 후 요(yaw) 각속도가 <b>−800°/s로 수렴(일정 스핀)</b>, 누적 요각 직선 증가(약 55회전). Mueller 2014 relaxed-hover와 동일 메커니즘.</li>
+    <li><b>드론 IRIS(1.37kg) 교체:</b> Minnie(0.29kg) 너무 작아 → 더 큰 IRIS로. init 한 줄로 교체, 제어기 자동 재유도. 단일고장 생존 확인(강하 −6.2m→회복).</li>
+    <li><b>무화물 baseline 확정:</b> Agility 0.5/0.5. 강하 5.4m·회복 7.3s. (IRIS는 무거워 강하 큼 = 본질적, 적응 효과 보일 여지 큼)</li>
+  </ul>
+
+  <h3>★ 화물 시험 — 문제 입증 (baseline B, 제어기는 화물 모름)</h3>
+  <p>화물을 plant에만 주입: 질량 + 평행축 관성 + <b>무게중심 하강</b>(<code>CoG_Pos_c</code>). 제어기는 마른 IRIS 기준 고정.</p>
+  <table>
+    <tr><th>화물</th><th>총질량</th><th>고장 후 최대강하</th><th>결과</th></tr>
+    <tr><td>0 g</td><td>1.37 kg</td><td>5.4 m</td><td class="ok-txt">생존</td></tr>
+    <tr><td>200 g</td><td>1.57 kg</td><td>5.7 m (회복 느려짐)</td><td class="ok-txt">생존</td></tr>
+    <tr><td><b>500 g</b></td><td>1.87 kg</td><td><b>15 m (지면충돌)</b></td><td class="warn-txt">추락</td></tr>
+    <tr><td><b>1000 g</b></td><td>2.37 kg</td><td><b>15 m (지면충돌)</b></td><td class="warn-txt">추락</td></tr>
+  </table>
+  <div class="hl">
+    <b>핵심:</b> 임계점 200~500g 사이. 기존 FTC(화물 모름)는 <b>500g부터 추락</b>.
+    IRIS 3로터로 1.87kg 들 추력은 있으므로 <b>추력부족이 아니라 제어 실패</b>(질량 오인 → 추력배분 오류)
+    → <b>적응형 FTC가 살릴 여지 있음.</b> "기존 FTC는 화물 500g에서 추락" = 연구 출발점.
+  </div>
+
+  <h3>★ 무게 추정기 새 모델 이식 — 성공 (<code>test_estimate_IRIS.m</code>)</h3>
+  <p>새 모델은 추력이 프로펠러 맵 기반이라 옛 <code>k0·w²</code> 불가. 대신 <b>호버 모터속도 기반</b>:
+     <code>m_total = m_dry · sum(ω_hover²)/sum(ω_dry²)</code> (마른 IRIS 1회 보정). PX4 호버추력 추정과 동일 원리.
+     고장(t=1s) <b>전 호버 구간</b>(−0.5~0.8s)에서만 측정 → 짧은 시뮬로 충분.</p>
+  <table>
+    <tr><th>화물 참값</th><th>추정 총질량</th><th>추정 화물</th><th>오차</th></tr>
+    <tr><td>0 g</td><td>1.370 kg</td><td>0 g</td><td class="ok-txt">0 g</td></tr>
+    <tr><td>200 g</td><td>1.568 kg</td><td>198 g</td><td class="ok-txt">−2 g (1.0%)</td></tr>
+    <tr><td>500 g</td><td>1.864 kg</td><td>494 g</td><td class="ok-txt">−6 g (1.2%)</td></tr>
+    <tr><td>1000 g</td><td>2.352 kg</td><td>982 g</td><td class="ok-txt">−18 g (1.8%)</td></tr>
+  </table>
+  <div class="hl"><b>전 조건 오차 2% 이내.</b> 구 코드 추정 자산이 새 IRIS 모델로 완전 이식 성공.
+     이 추정값을 적응형 FTC(C)의 입력으로 사용 → <b>2단계 완료.</b></div>
+</div>
 
 <!-- ===================== 1단계 ===================== -->
 <h2>1단계 — 실행 환경 구축 <span class="badge b-ok">완료</span></h2>

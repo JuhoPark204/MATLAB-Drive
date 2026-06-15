@@ -7,3 +7,6 @@
 *.slxc
 slprj/
 codegen/
+
+# 외부 클론 (자체 git repo, 단일고장 후보 베이스)
+Passive-FTC-Quadrotor/
