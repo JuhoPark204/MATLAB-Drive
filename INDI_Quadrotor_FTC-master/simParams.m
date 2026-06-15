@@ -40,6 +40,17 @@ simVars.drone.R = loadedParams.parameters.R;
 simVars.drone.mass = loadedParams.parameters.m;
 % simVars.drone.I = 0.0021;
 
+%% Payload (적응형 FTC 연구용) ----------------------------------
+% plant(진짜 드론)에만 반영. 추정기/제어기는 이 값을 모르고 추정해야 함.
+payload.mass   = 0.2;     % [kg] 진짜 화물무게  (실험: 0 / 0.2 / 0.5 / 1.0)
+payload.offset = 0.05;    % [m]  하단 고정 오프셋 (무게중심 아래, 고정값)
+simVars.payload = payload;
+
+simVars.drone.massDry = loadedParams.parameters.m;          % 드론 자체무게 (추정기가 빼는 기준)
+simVars.drone.mass = simVars.drone.massDry + payload.mass;  % 총질량 = 드론 + 화물
+simVars.drone.Iv   = simVars.drone.Iv + payload.mass*payload.offset^2*diag([1 1 0]); % 평행축 정리
+% --------------------------------------------------------------
+
 simVars.actuator.t_w = 1/30;        %  actuator time constant [s]
 simVars.actuator.rateRise = 5e4;    %  actuator rate limit [rad/s^2]
 simVars.actuator.rateFall = -5e4;

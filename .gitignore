@@ -1,0 +1,9 @@
+# MATLAB Drive 동기화 내부 파일 (버전관리 불필요, 계속 변경됨)
+.MATLABDriveAppData/
+
+# MATLAB 임시/자동저장/빌드 산출물
+*.asv
+*.autosave
+*.slxc
+slprj/
+codegen/

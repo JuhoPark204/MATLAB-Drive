@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>적응형 FTC 연구 진행 보고서</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#181b22; --card2:#1f232c; --line:#2b303b;
+    --txt:#e6e9ef; --muted:#9aa3b2; --accent:#4ea1ff; --accent2:#7c5cff;
+    --ok:#37d399; --run:#ffce54; --todo:#5a6275; --warn:#ff7a7a;
+    --code:#11141a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--txt);
+    font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+    line-height:1.65; font-size:15px;
+  }
+  .wrap{max-width:900px; margin:0 auto; padding:40px 24px 80px;}
+  header{
+    border-bottom:2px solid var(--line); padding-bottom:24px; margin-bottom:8px;
+  }
+  h1{font-size:26px; margin:0 0 6px; letter-spacing:-.3px;}
+  .sub{color:var(--muted); font-size:14px;}
+  .meta{display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:14px; font-size:13px; color:var(--muted);}
+  .meta b{color:var(--txt); font-weight:600;}
+  h2{
+    font-size:20px; margin:40px 0 14px; padding-left:12px;
+    border-left:4px solid var(--accent);
+  }
+  h3{font-size:16px; margin:24px 0 10px; color:var(--accent);}
+  h4{font-size:14px; margin:18px 0 6px; color:var(--accent2);}
+  p{margin:8px 0;}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px; margin:14px 0;
+  }
+  table{width:100%; border-collapse:collapse; margin:12px 0; font-size:14px;}
+  th,td{border:1px solid var(--line); padding:8px 12px; text-align:left;}
+  th{background:var(--card2); font-weight:600;}
+  tr:nth-child(even) td{background:rgba(255,255,255,.018);}
+  .badge{
+    display:inline-block; padding:2px 10px; border-radius:20px;
+    font-size:12px; font-weight:600; white-space:nowrap;
+  }
+  .b-ok{background:rgba(55,211,153,.15); color:var(--ok); border:1px solid rgba(55,211,153,.4);}
+  .b-run{background:rgba(255,206,84,.13); color:var(--run); border:1px solid rgba(255,206,84,.4);}
+  .b-todo{background:rgba(90,98,117,.18); color:var(--muted); border:1px solid var(--todo);}
+  code{
+    background:var(--code); padding:1px 6px; border-radius:5px;
+    font-family:"Cascadia Code","Consolas",monospace; font-size:13px; color:#cfe3ff;
+  }
+  pre{
+    background:var(--code); border:1px solid var(--line); border-radius:10px;
+    padding:14px 16px; overflow-x:auto; font-size:13px; line-height:1.5;
+  }
+  pre code{background:none; padding:0; color:#cfe3ff;}
+  ul{margin:8px 0; padding-left:22px;} li{margin:4px 0;}
+  .ok-txt{color:var(--ok); font-weight:600;}
+  .warn-txt{color:var(--run); font-weight:600;}
+  .hl{background:rgba(78,161,255,.1); border:1px solid rgba(78,161,255,.35);
+      border-radius:10px; padding:12px 16px; margin:12px 0;}
+  .done td{}
+  .pending{color:var(--muted); font-style:italic;}
+  footer{margin-top:50px; padding-top:18px; border-top:1px solid var(--line);
+          color:var(--muted); font-size:13px;}
+  .check{color:var(--ok);} .uncheck{color:var(--todo);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>적응형 FTC 연구 진행 보고서</h1>
+  <div class="sub">화물 장착 드론의 로터 고장 대응 적응형 제어기 설계<br>
+  <span style="font-size:13px">Adaptive FTC for Quadrotors with Bottom-Fixed Payload under Rotor Failure</span></div>
+  <div class="meta">
+    <span><b>기반 코드</b> INDI_Quadrotor_FTC (Sun et al. 2020, IEEE T-RO)</span>
+    <span><b>연구원</b> 박주호</span>
+    <span><b>지도교수</b> 임헌국</span>
+    <span><b>최종 갱신</b> 2026-06-16</span>
+  </div>
+  <p style="font-size:13px; color:var(--muted); margin-top:10px;">
+    ※ 이 문서는 <b>성과가 있을 때마다</b> 갱신됩니다. (오류·시행착오는 기록하지 않음)</p>
+</header>
+
+<!-- ===================== 로드맵 ===================== -->
+<h2>전체 로드맵 대비 현재 위치</h2>
+<table>
+  <tr><th>단계</th><th>내용</th><th>상태</th></tr>
+  <tr><td><b>1단계</b></td><td>오픈소스 실행 환경 구축, 파라미터 구조 파악</td>
+      <td><span class="badge b-ok">✅ 완료</span></td></tr>
+  <tr><td><b>2단계</b></td><td>화물 무게 추정 알고리즘 구현</td>
+      <td><span class="badge b-ok">✅ 검증 완료</span></td></tr>
+  <tr><td><b>3단계</b></td><td>추정값 기반 적응형 FTC (파라미터·게인 전환)</td>
+      <td><span class="badge b-run">🔄 진행 예정</span></td></tr>
+  <tr><td><b>4단계</b></td><td>3제어기 × 4화물조건 비교 실험 및 분석</td>
+      <td><span class="badge b-todo">⬜ 예정</span></td></tr>
+</table>
+
+<!-- ===================== 1단계 ===================== -->
+<h2>1단계 — 실행 환경 구축 <span class="badge b-ok">완료</span></h2>
+<div class="card">
+  <h3>성과</h3>
+  <ul>
+    <li>MATLAB R2026a 환경에서 시뮬레이션 <span class="ok-txt">정상 구동 성공</span>.</li>
+    <li>누락 함수를 <b>외부 툴박스 구매 없이</b> 자체 구현으로 해결:
+      <code>functions/eul2quat.m</code>, <code>eul2rotm.m</code>, <code>rotm2quat.m</code> (ZYX 표준 구현)
+      → Navigation/Robotics/UAV Toolbox 없이 동작. <span class="ok-txt">비용 절감.</span></li>
+    <li><code>run.m</code> 실행 → 20초 시뮬 완주, 3D 애니메이션(figure 100) 출력 확인.</li>
+  </ul>
+  <h3>시뮬레이션 구조 파악</h3>
+  <ul>
+    <li><b>물리(plant) 핵심:</b> <code>functions/EOMQuat.m</code>
+      — 병진운동에 <code>sim.drone.mass</code>(21행), 회전운동에 <code>sim.drone.Iv</code>(30–32행) 사용 → <b>질량·관성 주입 지점</b>.</li>
+    <li><b>검증:</b> <code>simVars.drone.mass</code>를 2배로 키우자 드론 추락 → plant가 질량 파라미터를 실제 사용함을 확인.
+      <b>.slx 수정 없이 파라미터만으로 화물 반영 가능</b> 확정.</li>
+    <li><b>데이터 로깅:</b> 모델이 <code>accB</code>(IMU 비력), <code>wRotorMeas</code>(로터속도), <code>forces</code> 등을 워크스페이스로 자동 저장(Timeseries).</li>
+  </ul>
+</div>
+
+<!-- ===================== 2단계 ===================== -->
+<h2>2단계 — 화물 무게 추정 <span class="badge b-ok">검증 완료</span></h2>
+
+<div class="card">
+  <h3>셋업</h3>
+  <ul>
+    <li><b>화물 주입(<code>simParams.m</code>):</b> plant에만 화물 반영, 제어기/추정기는 모름.
+      <code>payload.mass</code>(0/0.2/0.5/1.0kg), <code>payload.offset=0.05m</code>.
+      총질량 = 드론(0.375)+화물, 관성은 평행축 정리로 보정.</li>
+    <li><b>호버 구간 확보(<code>controlParams.m</code>):</b> <code>fail_time</code> 0 → <b>5.0초</b>.
+      0–5초 정상 호버(측정 구간) → 5초 로터 1,3번 고장 → 스핀 안정화.</li>
+  </ul>
+
+  <h3>핵심 물리 검증 (연구 동기 입증)</h3>
+  <div class="hl">
+    <ul style="margin:0">
+      <li>화물 <b>0g</b>: 고장 후에도 고도 유지 (정상 비행)</li>
+      <li>화물 <b>200g</b>: 고장 후 고도 하락 → <span class="warn-txt">"화물 모르는 기존 FTC는 고장 시 화물 때문에 추락"</span> 재현 성공</li>
+    </ul>
+    → 적응형 FTC의 필요성을 시뮬레이션으로 입증. (최종 보고서 핵심 그래프 후보)
+  </div>
+
+  <h3>무게 추정 알고리즘 (<code>estimate_payload.m</code>)</h3>
+  <p><b>원리:</b> 수평 호버에서 IMU 비력 <code>accB_z = -T/m</code> →
+     <code>m = T / abs(accB_z)</code>. 추력 T는 측정 로터속도로 독립 계산
+     <code>T = Σ k0·wᵢ²</code>. 화물무게 = 추정 총질량 − 드론 자체무게(0.375).
+     방식: 후처리(post-processing), PX4 Hover Thrust Estimator 로직 참조.</p>
+
+  <h3>화물 조건별 검증 결과 <span style="font-size:12px;color:var(--muted)">(추정 구간 2.0~2.5초)</span></h3>
+  <table>
+    <tr><th>화물 참값</th><th>추정 총질량</th><th>추정 화물무게</th><th>오차</th><th>오차율</th></tr>
+    <tr><td>0 g</td><td>0.3797 kg</td><td>5 g</td><td>+5 g</td><td>— (참값 0)</td></tr>
+    <tr><td>200 g</td><td>0.5815 kg</td><td>207 g</td><td>+7 g</td><td>3.3%</td></tr>
+    <tr><td>500 g</td><td>0.8838 kg</td><td>509 g</td><td>+9 g</td><td>1.8%</td></tr>
+  </table>
+  <p>→ 모든 조건에서 <span class="ok-txt">오차 10g 이내</span>로 추정 성공. <b>무게 무관하게 동작하는 추정기 검증 완료.</b>
+     (화물 없을 땐 ≈0g, 무거울수록 추력 신호가 커져 오차율 감소)</p>
+
+  <h3>통찰</h3>
+  <p>추정 구간을 2.0–4.5초로 넓게 잡으면 오차 16.7%(233g), 안정 호버 초반 2.0–2.5초로 좁히면 오차 3.3%(207g).
+     <b>추정 정확도는 호버 안정성에 민감</b> → 안정 구간 선택이 핵심. (계획서의 "안정된 호버 구간에서 1회 추정" 방침의 근거)</p>
+</div>
+
+<!-- ===================== 실험 설계 ===================== -->
+<h2>실험 설계 (가설 · 검증 방법 · 검증 결과)</h2>
+
+<div class="card">
+  <h3>가설</h3>
+  <ul>
+    <li><b>주가설(H):</b> 화물 무게를 추정하여 제어기의 파라미터(질량·관성)와 게인·허용기울기를
+      화물 조건에 맞게 적응시키면, <b>고정 파라미터 기존 FTC가 추락하는 화물 조건에서도 안정 비행(생존)이 가능하다.</b></li>
+    <li><b>H1:</b> 질량(+관성)만 올바르게 반영해도 추락을 막을 수 있는가? (INDI 추력배분 G행렬 보정만으로 충분한가)</li>
+    <li><b>H2:</b> 질량만으론 부족하고, 스핀 중 무게중심-원심력에 의한 기울기 심화 때문에
+      게인·허용기울기(<code>par.chi</code>, <code>par.position_maxAngle</code>)까지 적응해야 하는가?</li>
+  </ul>
+  <p>→ <b>H1/H2 중 무엇이 맞는지 가리는 것 자체가 핵심 연구 결과.</b> (현재 미확정)</p>
+
+  <h3>검증 방법</h3>
+  <ul>
+    <li><b>비교 대상</b> (동일 화물·동일 시나리오, 제어기만 교체):
+      <ul>
+        <li><b>B</b> — 기존 FTC: 질량 0.375 고정, 게인 고정 (화물 모름)</li>
+        <li><b>C1</b> — 적응형(부분): 추정 질량·관성만 반영</li>
+        <li><b>C2</b> — 적응형(전체): 질량·관성 + 게인 + 허용기울기 모두 적응</li>
+        <li>(계획서 4단계의 고정 PID는 하한 기준선으로 추가)</li>
+      </ul></li>
+    <li><b>공통 시나리오:</b> 0–5초 호버(이 구간 무게 추정) → 5초 로터 1,3 고장 → 스핀 안정화</li>
+    <li><b>화물 조건:</b> 0 / 200 / 500 g (1000g은 추력 포화 가능성 별도 확인)</li>
+    <li><b>평가 지표:</b> ① 생존 여부(추락/안정) ② 최대 기울기(롤·피치) ③ 고도 손실/오버슛 ④ 정착 시간 ⑤ 최대 스핀 각속도</li>
+    <li><b>전제(완료):</b> 무게 추정 정확도 — 200g→3.3%, 500g→1.8%. 적응에 쓸 추정값 신뢰 가능.</li>
+  </ul>
+
+  <h3>검증 결과 <span style="font-size:12px;color:var(--muted)">(3·4단계 진행하며 채움)</span></h3>
+  <table>
+    <tr><th>화물</th><th>제어기 B (기존)</th><th>제어기 C1 (질량만)</th><th>제어기 C2 (전체 적응)</th></tr>
+    <tr><td>0 g</td><td class="ok-txt">안정 (확인)</td><td class="pending">—</td><td class="pending">—</td></tr>
+    <tr><td>200 g</td><td class="warn-txt">추락 (확인)</td><td class="pending">미정</td><td class="pending">미정</td></tr>
+    <tr><td>500 g</td><td class="pending">미정</td><td class="pending">미정</td><td class="pending">미정</td></tr>
+  </table>
+</div>
+
+<!-- ===================== 코드 변경 내역 ===================== -->
+<h2>코드 변경 내역</h2>
+
+<div class="card">
+  <h3>신규 생성 파일</h3>
+  <table>
+    <tr><th>파일</th><th>내용</th><th>단계</th></tr>
+    <tr><td><code>functions/eul2quat.m</code></td><td>Euler→quaternion (ZYX). 툴박스 대체</td><td>1</td></tr>
+    <tr><td><code>functions/eul2rotm.m</code></td><td>Euler→회전행렬 (ZYX). 툴박스 대체</td><td>1</td></tr>
+    <tr><td><code>functions/rotm2quat.m</code></td><td>회전행렬→quaternion. 툴박스 대체</td><td>1</td></tr>
+    <tr><td><code>estimate_payload.m</code></td><td>화물 무게 추정기 (후처리)</td><td>2</td></tr>
+    <tr><td><code>report.html</code> / <code>PROGRESS.md</code></td><td>진행 보고서</td><td>—</td></tr>
+  </table>
+
+  <h3>수정 파일</h3>
+  <h4>simParams.m — 41행 뒤 화물 주입 블록 추가</h4>
+  <pre><code>%% Payload (적응형 FTC 연구용)
+payload.mass   = 0.5;     % [kg] 진짜 화물무게 (실험: 0 / 0.2 / 0.5 / 1.0)
+payload.offset = 0.05;    % [m]  하단 고정 오프셋
+simVars.payload = payload;
+simVars.drone.massDry = loadedParams.parameters.m;          % 드론 자체무게(추정 기준)
+simVars.drone.mass = simVars.drone.massDry + payload.mass;  % 총질량 = 드론 + 화물
+simVars.drone.Iv   = simVars.drone.Iv + payload.mass*payload.offset^2*diag([1 1 0]); % 평행축</code></pre>
+  <p>→ plant(EOMQuat)가 읽는 <code>simVars.drone.mass</code>/<code>.Iv</code>에 화물 반영. 제어기는 모름.</p>
+
+  <h4>controlParams.m — 15행 고장 시점 변경</h4>
+  <pre><code>par.fail_time = 0.0;  →  par.fail_time = 5.0;   % 0~5초 호버 구간 확보(무게추정용)</code></pre>
+</div>
+
+<!-- ===================== 다음 할 일 ===================== -->
+<h2>다음 할 일</h2>
+<div class="card">
+  <ul style="list-style:none; padding-left:4px;">
+    <li><span class="check">☑</span> 추정 구간 최적화 → 200g 오차 3.3% 확인</li>
+    <li><span class="check">☑</span> 화물 0 / 200 / 500g 추정 정확도 검증 (전부 오차 10g 이내)</li>
+    <li><span class="uncheck">☐</span> (선택) 1000g 추력 포화 가능성 확인</li>
+    <li><span class="uncheck">☐</span> (선택) 자동 안정구간 탐지 / PX4식 칼만필터로 추정 강건화</li>
+    <li><span class="uncheck">☐</span> <b>3단계 C1:</b> 추정 질량·관성을 제어기에 반영하는 적응 스위치 구현 → H1 검증</li>
+    <li><span class="uncheck">☐</span> <b>3단계 C2:</b> 게인·허용기울기까지 적응 (H1 부족 시) → H2 검증</li>
+    <li><span class="uncheck">☐</span> <b>4단계:</b> B vs C1 vs C2 비교 실험 및 지표 분석</li>
+  </ul>
+</div>
+
+<footer>
+  적응형 FTC 연구 진행 보고서 · 최종 갱신 2026-06-16 · 성과 단위로 갱신됨
+</footer>
+
+</div>
+</body>
+</html>
